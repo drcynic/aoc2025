@@ -18,14 +18,14 @@ fn main() {
         .unwrap()
         .trim()
         .split("\n")
-        .flat_map(|x| {
-            let d = if x.starts_with("L") { -1 } else { 1 };
-            let off = x[1..].parse::<usize>().unwrap();
-            std::iter::repeat_n(d, off)
-        })
-        .fold((50i32, 0), |(pos, count), off| {
-            let pos = (pos + off).rem_euclid(100);
-            (pos, count + if pos == 0 { 1 } else { 0 })
+        .fold((50i32, 0), |(pos, mut count), s| {
+            let d = if s.starts_with("L") { -1 } else { 1 };
+            let off = s[1..].parse::<i32>().unwrap() * d;
+            count += ((pos + off) / 100).abs();
+            if off < 0 && pos > 0 && pos <= off.abs() {
+                count += 1;
+            }
+            ((pos + off).rem_euclid(100), count)
         })
         .1;
     println!("{:?}", part2);
