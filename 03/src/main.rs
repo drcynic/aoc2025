@@ -14,16 +14,13 @@ fn solve(input: &str, num: usize) -> usize {
         .map(|l| {
             let b = l.trim().as_bytes().iter().map(|&b| (b - b'0') as usize).collect::<Vec<_>>();
             let mut start_idx = 0;
-            let mut str = "".to_string();
-            for n in 0..num {
+            (0..num).fold(0, |max_val, n| {
                 let idx = fst_max_idx(&b[start_idx..(b.len() - num + n + 1)]) + start_idx;
-                str = format!("{}{}", str, b[idx].to_string());
                 start_idx = idx + 1;
-            }
-            let max_val = str.parse::<usize>().unwrap();
-            max_val
+                max_val + b[idx] * 10usize.pow((num - n - 1) as u32)
+            })
         })
-        .sum::<usize>()
+        .sum()
 }
 
 fn fst_max_idx(bat: &[usize]) -> usize {
