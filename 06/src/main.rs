@@ -1,4 +1,4 @@
-use std::{collections::BTreeSet, fs};
+use std::fs;
 
 use itertools::Itertools;
 
@@ -12,6 +12,7 @@ fn main() {
         .filter_map(|e| if e == " " || e == "" { None } else { Some(e) })
         .collect::<Vec<_>>();
     let num_ops = ops.len();
+
     let part1 = lines[..ops_idx]
         .iter()
         .fold(vec![0; num_ops], |mut acc, l| {
@@ -36,47 +37,33 @@ fn main() {
     let vals_str = lines[..ops_idx].iter().map(|l| l.to_string()).collect::<Vec<_>>();
     let mut split_indices = vec![0];
     for c in 0..vals_str[0].len() {
-        let mut valid = true;
-        for r in 0..vals_str.len() {
-            let ch = &vals_str[r][c..c + 1];
-            if ch != " " {
-                valid = false;
-                break;
-            }
-        }
-        if valid {
+        if vals_str.iter().all(|val| val.chars().nth(c).unwrap() == ' ') {
             split_indices.push(c);
         }
     }
     split_indices.push(vals_str[0].len());
 
     let p2 = split_indices
-        .windows(2)
+        .iter()
+        .tuple_windows()
         .enumerate()
-        .map(|(c, w)| {
-            let (start, end) = (w[0] + 1, w[1]);
-            let start = if start == 1 { 0 } else { start };
+        .map(|(c, (&start, &end))| {
+            let op = if ops[c] == "+" { |l: usize, r: usize| l + r } else { |l, r| l * r };
+            let start = if start == 0 { 0 } else { start + 1 };
             let vals = vals_str.iter().map(|s| &s[start..end]).collect::<Vec<_>>();
             let mut col_res = if ops[c] == "*" { 1 } else { 0 };
             for sc in 0..vals[0].len() {
-                let mut nums = Vec::new();
-                for vi in 0..vals.len() {
-                    let ch = vals[vi].as_bytes()[sc];
-                    if ch >= b'0' && ch <= b'9' {
-                        nums.push(ch - b'0');
-                    }
-                }
-                let num_str = nums.iter().join("");
-                let num = num_str.parse::<usize>().unwrap();
-                if ops[c] == "+" {
-                    col_res += num;
-                } else {
-                    col_res *= num;
-                }
+                let num = vals
+                    .iter()
+                    .map(|val| val.chars().nth(sc).unwrap())
+                    .join("")
+                    .trim()
+                    .parse::<usize>()
+                    .unwrap();
+                col_res = op(col_res, num);
             }
             col_res
         })
         .sum::<usize>();
-
     println!("part2 {:?}", p2);
 }
